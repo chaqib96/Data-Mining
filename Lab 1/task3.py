@@ -21,24 +21,27 @@ class PolynomialLasso:
         """
         Transforms input features X into polynomial features and scales them.
         """
-        # TODO: Implement this function
-        # 1. Initialize self.poly (if None) and transform X
-        # 2. Initialize self.scaler (if None) and scale the poly features
-        # Hint: Check if self.poly/self.scaler are None to decide whether to fit_transform or just transform
-        # X_scaled = ...
+        if self.poly is None:
+            self.poly = PolynomialFeatures(degree=self.degree, include_bias=False)
+            X_poly = self.poly.fit_transform(X)
+        else:
+            X_poly = self.poly.transform(X)
+        if self.scaler is None:
+            self.scaler = StandardScaler()
+            X_scaled = self.scaler.fit_transform(X_poly)
+        else:
+            X_scaled = self.scaler.transform(X_poly)
         return X_scaled
 
     def _split_data(self, X, y, val_ratio):
         """
         Splits the data into training and validation sets using the LAST n rows logic.
         """
-        # TODO: Implement this function
-        # Calculate split index: n_val = total_samples * val_ratio
-        # X_train_sub = ...
-        # y_train_sub = ...
-        # X_val = ...
-        # y_val = ...
-        
+        n_val = int(len(X) * val_ratio)
+        X_train_sub = X[:-n_val]
+        y_train_sub = y[:-n_val]
+        X_val = X[-n_val:]
+        y_val = y[-n_val:]
         return X_train_sub, y_train_sub, X_val, y_val
 
     def fit(self, X, y, val_ratio=0.2):
@@ -48,32 +51,25 @@ class PolynomialLasso:
         # Reset transformers for new training
         self.poly = None
         self.scaler = None
-        
-        # 1. Transform features (will fit transformers)
-        # X_poly = self._transform_features(X)
-        
-        # 2. Split data
-        # X_sub, y_sub, X_val, y_val = ...
+
+        X_poly = self._transform_features(X)
+        X_sub, y_sub, X_val, y_val = self._split_data(X_poly, y, val_ratio)
 
         best_alpha = None
         best_mse = float('inf')
-        
-        # 3. Hyperparameter search
-        # for alpha in self.alphas:
-            # Initialize Lasso
-            # Increase max_iter to 100000 to ensure convergence with Coordinate Descent.
-            # lasso = Lasso(..., max_iter=100000)
-            
-            # Train on sub-training set
-            # Validate on validation set
-            # Update best_alpha if mse is lower
-        
-        # self.best_alpha = ...
-        # self.min_val_error = ...
-        
-        # 4. Refit on ALL data with best alpha
-        # self.best_model = ...
-        # self.best_model.fit(X_poly, y)
+
+        for alpha in self.alphas:
+            lasso = Lasso(alpha=alpha, max_iter=100000)
+            lasso.fit(X_sub, y_sub)
+            mse = mean_squared_error(y_val, lasso.predict(X_val))
+            if mse < best_mse:
+                best_mse = mse
+                best_alpha = alpha
+
+        self.best_alpha = best_alpha
+        self.min_val_error = best_mse
+        self.best_model = Lasso(alpha=self.best_alpha, max_iter=100000)
+        self.best_model.fit(X_poly, y)
         
     def predict(self, X):
         """
@@ -81,7 +77,5 @@ class PolynomialLasso:
         """
         if self.best_model is None:
             raise RuntimeError("Model is not fitted yet.")
-            
-        # 5. Transform features (will use fitted transformers)
-        # X_poly = self._transform_features(X)
-        # return self.best_model.predict(X_poly)
+        X_poly = self._transform_features(X)
+        return self.best_model.predict(X_poly)

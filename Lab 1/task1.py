@@ -75,14 +75,10 @@ class RandomForest:
             - y_sample is the target vector of the bootstrap sample.
             - indices are the indices of the selected samples.
         """
-        # TODO implement this function
-        # Step 1: Use np.random.choice() to sample indices from X.
-        #indices = ...
-
-        # Step 2: Select the corresponding rows from X and y using the sampled indices.
-        #X_sample = ...
-        #y_sample = ...
-
+        n_samples = X.shape[0]
+        indices = np.random.choice(n_samples, size=n_samples, replace=True)
+        X_sample = X[indices]
+        y_sample = y[indices]
         return X_sample, y_sample, indices
 
     def _select_random_features(self, X, n_features):
@@ -103,20 +99,15 @@ class RandomForest:
             - X_subset is the feature matrix containing only the selected features.
             - feature_indices are the indices of the selected features.
         """
-        # TODO implement this function
-        # Step 1: Compute the number of features to select (max_features).
         if self.max_features == "sqrt":
-            # max_features = ...
+            max_features = max(1, int(np.sqrt(n_features)))
         elif self.max_features == "log2":
-            # max_features = ...
+            max_features = max(1, int(np.log2(n_features)))
         else:
-            max_features = n_features
+            max_features = min(int(self.max_features), n_features)
 
-        # Step 2: Randomly choose max_features feature indices using np.random.choice().
-        #feature_indices = ...
-
-        # Step 3: Extract the corresponding columns from X using these indices.
-        #X_subset = ...
+        feature_indices = np.random.choice(n_features, size=max_features, replace=False)
+        X_subset = X[:, feature_indices]
         return X_subset, feature_indices
 
     def fit(self, X, y):
@@ -139,24 +130,14 @@ class RandomForest:
         np.random.seed(self.seed)
 
         for _ in range(self.n_estimators):
-            # TODO implement this function
-            # Create bootstrap sample
-            # Step 1: Call _bootstrap_sample() to generate a training sample.
-            # X_sample, y_sample, _ = ...
-
-            
-            # Step 2: Call _select_random_features() to select features for training.
-            # X_subset, feature_indices = ...
-
-            # Step 3: Train a DecisionTreeClassifier on the sampled data.
-            # NOTE: For DecisionTreeClassifier
-            #  - Only set max_depth (from self.) and min_samples_split from (self.)
-            #  - Set random_state=0
-            
-            # tree = ...
+            X_sample, y_sample, _ = self._bootstrap_sample(X, y)
+            X_subset, feature_indices = self._select_random_features(X_sample, n_features)
+            tree = DecisionTreeClassifier(
+                max_depth=self.max_depth,
+                min_samples_split=self.min_samples_split,
+                random_state=0
+            )
             tree.fit(X_subset, y_sample)
-
-            # Step 4: Store the trained tree and the selected feature indices in self.trees.
             selected_features = feature_indices
             self.trees.append((tree, selected_features))
 

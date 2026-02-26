@@ -16,9 +16,8 @@ class AdaBoost:
         """
         Calculates the weighted training error.
         """
-        # TODO: Implement this function
-        # Calculate the weighted sum of incorrect predictions
-        # error = ...
+        incorrect = (y != y_pred)
+        error = np.sum(w[incorrect])
         return error
     
     def _compute_alpha(self, error):
@@ -26,23 +25,16 @@ class AdaBoost:
         Computes the weight (alpha) of the current weak learner.
         """
         epsilon = 1e-10  # Tiny constant to avoid division by zero
-        # TODO: Implement this function
-        # Calculate alpha based on the error
-        # alpha = ...
+        error = np.clip(error, epsilon, 1 - epsilon)
+        alpha = 0.5 * np.log((1 - error) / error)
         return alpha
     
     def _update_weights(self, w, alpha, y, y_pred):
         """
         Updates and normalizes sample weights.
         """
-        # TODO: Implement this function
-        # Step 1: Update weights (increase weight for misclassified samples)
-        # Hint: y * y_pred is 1 if correct, -1 if incorrect
-        # w = ...
-        
-        # Step 2: Normalize weights so they sum to 1
-        # w = ...
-        
+        w = w * np.exp(-alpha * y * y_pred)
+        w = w / np.sum(w)
         return w
         
     def fit(self, X, y):
@@ -73,16 +65,10 @@ class AdaBoost:
             # Predict on training data to compute error
             y_pred = stump.predict(X)
             
-            # TODO: Implement the boosting steps
-            # b) call _compute_error
-            # error = ...
-            
-            # c) call _compute_alpha
-            # alpha = ...
-            
-            # d) call _update_weights
-            # w = ...
-            
+            error = self._compute_error(y, y_pred, w)
+            alpha = self._compute_alpha(error)
+            w = self._update_weights(w, alpha, y, y_pred)
+
             # Store the trained model and its weight
             self.models.append(stump)
             self.alphas.append(alpha)
