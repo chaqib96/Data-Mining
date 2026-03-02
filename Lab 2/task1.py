@@ -7,19 +7,17 @@ import numpy as np
 def f1(x: float) -> float:
     """
     Implement objective f1.
-
+    f1(x) = (x^2 - 1)^2 + x
     """
-    #TODO
-    #return ...
+    return (x ** 2 - 1) ** 2 + x
 
 
 def f2(x: float) -> float:
     """
     Implement objective f2.
-
+    f2(x) = 10 (x - 2)^2
     """
-    #TODO
-    #return ...
+    return 10.0 * (x - 2) ** 2
 
 # --------------------------
 # SubTask 2: Gradients
@@ -30,8 +28,7 @@ def grad_f1(x: float) -> float:
     Derivative of:
         f1(x) = (x^2 - 1)^2 + x
     """
-    #TODO
-    #return ...
+    return 4 * x * (x ** 2 - 1) + 1
 
 
 def grad_f2(x: float) -> float:
@@ -39,8 +36,7 @@ def grad_f2(x: float) -> float:
     Derivative of:
         f2(x) = 10 (x - 2)^2
     """
-    #TODO
-    #return ...
+    return 20.0 * (x - 2)
 
 # --------------------------
 # SubTask 3: Gradient Descent
@@ -72,23 +68,11 @@ def gradient_descent(
 
     for t in range(n_steps):
         g = grad_fn(x)
-
-        # (3a) Gradient descent update
-        #TODO
-        #x = ...
-
-        # (3b) Track history
-        #TODO: Uncomment
-        #history.append(x)
-
-        # (3c) Convergence check
-        #TODO: Uncomment
-        #if abs(grad_fn(x)) < tol:
-        #    return x, np.array(history), "converged"
-
-        # (3d) Divergence detection
-        #TODO: Uncomment
-        #if (not np.isfinite(x)) or (abs(x) > divergence_bound) or (not np.isfinite(f_fn(x))):
-        #    return x, np.array(history), "diverged"
+        x = x - lr * g
+        history.append(x)
+        if abs(grad_fn(x)) < tol:
+            return x, np.array(history), "converged"
+        if (not np.isfinite(x)) or (abs(x) > divergence_bound) or (not np.isfinite(f_fn(x))):
+            return x, np.array(history), "diverged"
 
     return x, np.array(history), "max_steps"

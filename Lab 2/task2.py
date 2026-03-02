@@ -21,8 +21,7 @@ def pseudoinverse_normal_eq(A: np.ndarray) -> np.ndarray:
     A_pinv : np.ndarray, shape (d, n)
         The pseudoinverse of A.
     """
-    # TODO: implement
-    # A_pinv = ...
+    A_pinv = np.linalg.inv(A.T @ A) @ A.T
     return A_pinv
 
 # --------------------------
@@ -44,8 +43,7 @@ def least_squares_grad(A: np.ndarray, b: np.ndarray, theta: np.ndarray) -> np.nd
     grad : (d',) gradient vector
     """
     n = A.shape[0]
-    # TODO (a): implement grad
-    # grad = ...
+    grad = (1.0 / n) * (A.T @ (A @ theta - b))
     return grad
 
 
@@ -62,11 +60,9 @@ def choose_learning_rate(A: np.ndarray) -> float:
     eta : float
     """
     n = A.shape[0]
-    # TODO (b): compute L and return eta = 1/L
-    # Hint: np.linalg.svd(A, compute_uv=False)[0] is the largest singular value
-    # sigma_max = ...
-    # L =
-    # eta =
+    sigma_max = np.linalg.svd(A, compute_uv=False)[0]
+    L = (1.0 / n) * (sigma_max ** 2)
+    eta = 1.0 / L
     return eta
 
 
@@ -98,11 +94,7 @@ def solve_least_squares_gd(
 
     for t in range(n_steps):
         g = least_squares_grad(A, b, theta)
-
-        # TODO (c): gradient descent update
-        # theta = ...
-
-        # Optional early stopping (keep)
+        theta = theta - eta * g
         if np.linalg.norm(g) < tol:
             break
 
